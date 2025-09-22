@@ -99,6 +99,11 @@ namespace UI
 			void			AddFlag(DWORD flag)		{ SET_BIT(m_dwFlag, flag);		}
 			void			RemoveFlag(DWORD flag)	{ REMOVE_BIT(m_dwFlag, flag);	}
 			bool			IsFlag(DWORD flag)		{ return (m_dwFlag & flag) ? true : false;	}
+
+
+			void			EnableScissorRect();
+			void			DisableScissorRect();
+			bool			IsScissorRectEnabled() const;
 			/////////////////////////////////////
 
 			virtual void	OnRender();
@@ -173,6 +178,7 @@ namespace UI
 
 			bool				m_bMovable;
 			bool				m_bShow;
+			bool				m_bEnableScissorRect;
 
 			DWORD				m_dwFlag;			
 

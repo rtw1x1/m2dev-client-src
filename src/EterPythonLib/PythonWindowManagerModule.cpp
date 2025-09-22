@@ -2307,6 +2307,35 @@ PyObject * wndMgrShowOverInWindowName(PyObject * poSelf, PyObject * poArgs)
 	return Py_BuildNone();
 }
 
+PyObject* wndMgrEnableScissorRect(PyObject* poSelf, PyObject* poArgs)
+{
+	UI::CWindow* pWindow;
+	if (!PyTuple_GetWindow(poArgs, 0, &pWindow))
+		return Py_BuildException();
+
+	pWindow->EnableScissorRect();
+	Py_RETURN_NONE;
+}
+
+PyObject* wndMgrDisableScissorRect(PyObject* poSelf, PyObject* poArgs)
+{
+	UI::CWindow* pWindow;
+	if (!PyTuple_GetWindow(poArgs, 0, &pWindow))
+		return Py_BuildException();
+
+	pWindow->DisableScissorRect();
+	Py_RETURN_NONE;
+}
+
+PyObject* wndMgrIsScissorRectEnabled(PyObject* poSelf, PyObject* poArgs)
+{
+	UI::CWindow* pWindow;
+	if (!PyTuple_GetWindow(poArgs, 0, &pWindow))
+		return Py_BuildException();
+
+	return Py_BuildValue("b", pWindow->IsScissorRectEnabled());
+}
+
 void initwndMgr()
 {
 	static PyMethodDef s_methods[] =
@@ -2501,6 +2530,10 @@ void initwndMgr()
 		// For Debug
 		{ "SetOutlineFlag",				wndMgrSetOutlineFlag,				METH_VARARGS },
 		{ "ShowOverInWindowName",		wndMgrShowOverInWindowName,			METH_VARARGS },
+
+		{ "EnableScissorRect",			wndMgrEnableScissorRect,			METH_VARARGS },
+		{ "DisableScissorRect",			wndMgrDisableScissorRect,			METH_VARARGS },
+		{ "IsScissorRectEnabled",		wndMgrIsScissorRectEnabled,			METH_VARARGS },
 
 		{ NULL,							NULL,								NULL },
 	};

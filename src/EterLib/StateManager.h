@@ -245,6 +245,10 @@ public:
 	void	SetLight(DWORD index, CONST D3DLIGHT9* pLight);
 	void	GetLight(DWORD index, D3DLIGHT9* pLight);
 
+	// Scissor Rect
+	void	SetScissorRect(const RECT& c_rRect);
+	void	GetScissorRect(RECT* pRect);
+
 	// Renderstates
 	void	SaveRenderState(D3DRENDERSTATETYPE Type, DWORD dwValue);
 	void	RestoreRenderState(D3DRENDERSTATETYPE Type);
