@@ -74,8 +74,8 @@ enum EBillBoardType
 	
 	BILLBOARD_TYPE_LIE, // 바닥에 누은 형상
 
-	BILLBOARD_TYPE_2FACE, //     / and \ 
-	BILLBOARD_TYPE_3FACE, //     / and \ and -
+	BILLBOARD_TYPE_2FACE, //     / and
+	BILLBOARD_TYPE_3FACE, //     / and 
 
 	//BILLBOARD_TYPE_RAY, // 잔상
 
