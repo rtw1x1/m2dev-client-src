@@ -26,6 +26,16 @@ void CStateManager::GetLight(DWORD index, D3DLIGHT9* pLight)
 	*pLight = m_kLightData.m_akD3DLight[index];
 }
 
+void CStateManager::SetScissorRect(const RECT& c_rRect)
+{
+	m_lpD3DDev->SetScissorRect(&c_rRect);
+}
+
+void CStateManager::GetScissorRect(RECT* pRect)
+{
+	m_lpD3DDev->GetScissorRect(pRect);
+}
+
 bool CStateManager::BeginScene()
 {
 	m_bScene = true;
@@ -216,6 +226,7 @@ void CStateManager::SetDefaultState()
 	SetRenderState(D3DRS_VERTEXBLEND, D3DVBF_DISABLE);
 	SetRenderState(D3DRS_CLIPPLANEENABLE, 0);
 	SaveVertexProcessing(FALSE);
+	SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
 	SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
 	SetRenderState(D3DRS_MULTISAMPLEMASK, 0xFFFFFFFF);
 	SetRenderState(D3DRS_PATCHEDGESTYLE, D3DPATCHEDGE_CONTINUOUS);

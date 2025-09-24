@@ -4,11 +4,63 @@
 #include "PythonSlotWindow.h"
 #include "PythonWindowManager.h"
 
+#include "EterLib/StateManager.h"
+
 BOOL g_bOutlineBoxEnable = FALSE;
 
 namespace UI
 {
-	
+	struct ScopedScissorRect
+	{
+		DWORD __OldState = 0;
+		RECT __OldRect = { 0 };
+
+		bool __Enable;
+		RECT __Rect;
+
+		ScopedScissorRect(const RECT& rect, bool enable)
+			: __Rect(rect), __Enable(enable)
+		{
+			__OldState = STATEMANAGER.GetRenderState(D3DRS_SCISSORTESTENABLE);
+			STATEMANAGER.GetScissorRect(&__OldRect);
+
+			STATEMANAGER.SetRenderState(D3DRS_SCISSORTESTENABLE, enable);
+			STATEMANAGER.SetScissorRect(rect);
+		}
+
+		~ScopedScissorRect()
+		{
+			STATEMANAGER.SetRenderState(D3DRS_SCISSORTESTENABLE, __OldState);
+			STATEMANAGER.SetScissorRect(__OldRect);
+		}
+	};
+
+	template<typename Func>
+	CWindow* FindWindowUpwards(CWindow* start, Func& f)
+	{
+		while (start && start->IsWindow()) 
+		{
+			if (f(start))
+				return start;
+			
+			start = start->GetParent();
+		}
+
+	}
+
+	static CWindow* GetParentScissorWindow(CWindow* pWin)
+	{
+		if (!pWin)
+			return nullptr;
+
+		auto f = [](CWindow* pCurrWin) -> bool
+		{
+			return pCurrWin->IsScissorRectEnabled();
+		};
+
+		return FindWindowUpwards(pWin, f);
+	}
+
 	CWindow::CWindow(PyObject * ppyObject) : 
 		m_x(0),
 		m_y(0),
@@ -16,6 +68,7 @@ namespace UI
 		m_lHeight(0),
 		m_poHandler(ppyObject),
 		m_bShow(false),
+		m_bEnableScissorRect(false),
 		m_pParent(NULL),
 		m_dwFlag(0),
 		m_isUpdatingChildren(FALSE)
@@ -145,15 +198,57 @@ namespace UI
 		if (!IsShow())
 			return;
 
-		OnRender();
-
-		if (g_bOutlineBoxEnable)
+		if (m_bEnableScissorRect)
 		{
-			CPythonGraphic::Instance().SetDiffuseColor(1.0f, 1.0f, 1.0f);
-			CPythonGraphic::Instance().RenderBox2d(m_rect.left, m_rect.top, m_rect.right, m_rect.bottom);
-		}
+			
+			RECT scissorRect;
+			scissorRect.left = std::max<int32_t>(0, m_rect.left);
+			scissorRect.top = std::max<int32_t>(0, m_rect.top);
+			scissorRect.right = m_rect.left + m_lWidth;
+			scissorRect.bottom = m_rect.top + m_lHeight;
 
-		std::for_each(m_pChildList.begin(), m_pChildList.end(), std::mem_fn(&CWindow::Render));
+			CWindow* pParentScissorWindow = GetParentScissorWindow(GetParent());
+
+			if (pParentScissorWindow)
+			{
+				const RECT& parentRect = pParentScissorWindow->m_rect;
+				RECT parentScissorRect;
+
+				parentScissorRect.left = std::max<int32_t>(0, parentRect.left);
+				parentScissorRect.top = std::max<int32_t>(0, parentRect.top);
+				parentScissorRect.right = parentRect.left + pParentScissorWindow->GetWidth();
+				parentScissorRect.bottom = parentRect.top + pParentScissorWindow->GetHeight();
+
+				scissorRect.left = std::max<int32_t>(scissorRect.left, parentScissorRect.left);
+				scissorRect.top = std::max<int32_t>(scissorRect.top, parentScissorRect.top);
+				scissorRect.right = std::min<int32_t>(scissorRect.right, parentScissorRect.right);
+				scissorRect.bottom = std::min<int32_t>(scissorRect.bottom, parentScissorRect.bottom);
+			}
+
+			ScopedScissorRect scopedScissorRect(scissorRect, true);
+
+			OnRender();
+
+			if (g_bOutlineBoxEnable)
+			{
+				CPythonGraphic::Instance().SetDiffuseColor(1.0f, 1.0f, 1.0f);
+				CPythonGraphic::Instance().RenderBox2d(m_rect.left, m_rect.top, m_rect.right, m_rect.bottom);
+			}
+
+			std::for_each(m_pChildList.begin(), m_pChildList.end(), std::mem_fn(&CWindow::Render));
+		}
+		else 
+		{
+			OnRender();
+
+			if (g_bOutlineBoxEnable)
+			{
+				CPythonGraphic::Instance().SetDiffuseColor(1.0f, 1.0f, 1.0f);
+				CPythonGraphic::Instance().RenderBox2d(m_rect.left, m_rect.top, m_rect.right, m_rect.bottom);
+			}
+
+			std::for_each(m_pChildList.begin(), m_pChildList.end(), std::mem_fn(&CWindow::Render));
+		}
 	}
 
 	void CWindow::OnUpdate()
@@ -169,6 +264,21 @@ namespace UI
 		//PyCallClassMemberFunc(m_poHandler, "OnUpdate", BuildEmptyTuple());
 		PyCallClassMemberFunc_ByPyString(m_poHandler, poFuncName_OnUpdate, BuildEmptyTuple());
 		
+	}
+
+	void CWindow::EnableScissorRect()
+	{
+		m_bEnableScissorRect = true;
+	}
+
+	void CWindow::DisableScissorRect()
+	{
+		m_bEnableScissorRect = false;
+	}
+
+	bool CWindow::IsScissorRectEnabled() const
+	{
+		return m_bEnableScissorRect;
 	}
 
 	void CWindow::OnRender()
