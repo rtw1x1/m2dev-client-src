@@ -46,6 +46,7 @@ namespace UI
 			start = start->GetParent();
 		}
 
+		return nullptr;
 	}
 
 	static CWindow* GetParentScissorWindow(CWindow* pWin)

@@ -118,7 +118,7 @@ bool CNetworkStream::__RecvInternalBuffer()
 #else
 	if (IsSecurityMode())
 	{		
-		int restSize = min(m_recvTEABufSize - m_recvTEABufInputPos, m_recvBufSize - m_recvBufInputPos);
+		int restSize = std::min(m_recvTEABufSize - m_recvTEABufInputPos, m_recvBufSize - m_recvBufInputPos);
  
 		if (restSize > 0)
 		{
