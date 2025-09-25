@@ -64,7 +64,7 @@ class CDynamicPool
 			m_Free = m_Data;
 		}
 		
-		DWORD GetCapacity()
+		size_t GetCapacity()
 		{
 			return m_Data.size();
 		}

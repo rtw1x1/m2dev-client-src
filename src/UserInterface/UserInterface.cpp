@@ -10,7 +10,6 @@
 #endif
 
 #include "eterLib/Util.h"
-#include "eterBase/CPostIt.h"
 #include "EterBase/lzo.h"
 
 #include "PackLib/PackManager.h"
